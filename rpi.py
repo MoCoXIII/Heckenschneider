@@ -1,7 +1,7 @@
 import os
 import time
 import serial
-
+import RPi.GPIO as GPIO
 import serial.tools.list_ports
 
 ports = serial.tools.list_ports.comports()
@@ -28,3 +28,8 @@ while True:
     if ser.in_waiting:
         message = ser.readline().decode().strip()
         print(message)
+        match message:
+            case "Button pressed":
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(21, GPIO.OUT)
+                GPIO.output(21, not GPIO.input(21))
