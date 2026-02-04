@@ -1,13 +1,27 @@
 import os
 import time
+import random
 import serial
-import RPi.GPIO as GPIO
+import gpiozero
+from gpiozero.pins.lgpio import LGPIOFactory
 import serial.tools.list_ports
 
 ports = serial.tools.list_ports.comports()
 for port in ports:
     print(port.device, "-", port.description)
 
+factory = LGPIOFactory()
+
+led = gpiozero.LED(21)
+led.off()
+
+servo = gpiozero.AngularServo(
+    14, min_angle=0, max_angle=270, initial_angle=135,
+    min_pulse_width=0.0006,  # try 600 µs
+    max_pulse_width=0.0024,  # try 2400 µs
+    pin_factory=factory
+)
+servo.angle = 0
 
 ser = None
 while not ser:
@@ -28,8 +42,16 @@ while True:
     if ser.in_waiting:
         message = ser.readline().decode().strip()
         print(message)
-        match message:
-            case "Button pressed":
-                GPIO.setmode(GPIO.BCM)
-                GPIO.setup(21, GPIO.OUT)
-                GPIO.output(21, not GPIO.input(21))
+        if message[:3] == "led":
+            match message[3:]:
+                case "on":
+                    led.on()
+                case "off":
+                    led.off()
+                case _:
+                    led.toggle()
+        elif message[:5] == "servo":
+            if len(message) > 5:
+                servo.angle = int(message[5:])
+            else:
+                servo.angle = None
