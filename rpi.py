@@ -45,9 +45,6 @@ while True:
         if message == "led":
             led.toggle()
         elif message.startswith("servo"):
-        if message == "led":
-            led.toggle()
-        elif message.startswith("servo"):
             if len(message) > 5:
                 servo.angle = int(message[5:])
             else:
