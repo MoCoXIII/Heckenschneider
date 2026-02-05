@@ -20,6 +20,10 @@ UiMode currentMode = MENU_SELECTION;
 int screenW, screenH;
 int statusY;
 
+bool connected;
+long lastPosition;
+bool stickCentered = false;  // graphical hint in driving mode
+
 // ---------- Helpers ----------
 const char* menuName(Menu m) {
   switch (m) {
@@ -103,6 +107,7 @@ void handleSerial(String& status) {
     message.trim();
 
     if (message == "connected") {
+      connected = true;
       Serial.println("connected");
     }
 
@@ -140,7 +145,9 @@ void setup() {
   M5Dial.Display.setTextColor(ORANGE);
   M5Dial.Display.setTextDatum(middle_center);
 
-  redrawUI("connecting...");
+  clearScreen();
+  connected = false;
+  M5Dial.Display.drawString("connecting...", screenW / 2, screenH / 2);
 
   while (!Serial) {
     delay(10);
@@ -154,9 +161,15 @@ void loop() {
   static String statusText = "connecting...";
   handleSerial(statusText);
 
-  if (M5Dial.BtnA.wasPressed()) {
+  if (!connected) {
+    return;
+  }
+
+  if (M5Dial.BtnA.wasReleasedAfterHold()) {
     currentMode = (currentMode == MENU_SELECTION) ? MENU_ACTION : MENU_SELECTION;
     redrawUI(menuName(currentMenu));
+  } else if (M5Dial.BtnA.wasReleased()) {
+    Serial.println("led");
   }
 
   if (currentMode == MENU_SELECTION) {
@@ -172,6 +185,82 @@ void loop() {
 
       M5Dial.Encoder.write(0);
       redrawUI(menuName(currentMenu));
+    }
+  } else {
+    switch (currentMenu) {
+      case SERVO:
+        {
+          long position = M5Dial.Encoder.read();
+          if (position < 0) {
+            position = 0;
+            M5Dial.Encoder.write(0);
+          } else if (position > 48) {
+            position = 48;
+            M5Dial.Encoder.write(48);
+          }
+          long adjustedPosition = position * 5.625;
+          if (lastPosition != position) {
+            lastPosition = position;
+            Serial.println("servo" + String(adjustedPosition));
+          }
+        }
+        break;
+      case LIFT:
+        {
+          long position = M5Dial.Encoder.read();
+
+          if (position < 0) {
+            position = 0;
+            M5Dial.Encoder.write(0);
+          } else if (position > 100) {
+            position = 100;
+            M5Dial.Encoder.write(100);
+          }
+
+          if (lastPosition != position) {
+            lastPosition = position;
+            Serial.println("lift" + String(position));
+          }
+        }
+        break;
+      case DRIVE:
+        {
+          auto t = M5Dial.Touch.getDetail();
+          bool changed = false;
+          long dx = 0;
+          long dy = 0;
+          long enc = 0;
+
+
+
+          if (t.isPressed()) {
+            long distLeft = screenW / 3 - t.x;
+            long distRight = t.x - screenW * 2 / 3;
+            dx = distLeft > 0 ? -distLeft : distRight > 0 ? distRight
+                                                          : 0;
+            long distUp = screenH / 3 - t.y;
+            long distDown = t.y - screenH * 2 / 3;
+            dy = distUp > 0 ? distUp : distDown > 0 ? -distDown
+                                                    : 0;
+            clearScreen();
+            M5Dial.Display.fillCircle(t.x, t.y, 20, GREEN);
+            stickCentered = false;
+            changed = true;
+          } else if (!stickCentered) {
+            clearScreen();
+            M5Dial.Display.fillCircle(screenW / 2, screenH / 2, 20, ORANGE);
+            stickCentered = true;
+          }
+          if (M5Dial.Encoder.read() != 0) {
+            changed = true;
+            enc = M5Dial.Encoder.readAndReset();
+          }
+
+          if (changed) {
+            Serial.println("drive " + String(dx) + " " + String(dy) + " " + String(enc));
+          }
+        }
+        break;
     }
   }
 }
