@@ -9,6 +9,13 @@ enum Menu {
 
 Menu currentMenu = SERVO;
 
+enum UiMode {
+  MENU_SELECTION,
+  MENU_ACTION
+};
+
+UiMode currentMode = MENU_SELECTION;
+
 // ---------- Layout ----------
 int screenW, screenH;
 int statusY;
@@ -42,31 +49,27 @@ void drawStatusText(const String& text) {
 }
 
 void drawMenuLabel(const char* text, int x, int y, float angle, bool arrowLeft) {
-  M5Dial.Display.setTextDatum(middle_center);
-  M5Dial.Display.setTextColor(ORANGE);
+  uint16_t color = (currentMode == MENU_SELECTION) ? ORANGE : DARKGREY;
 
-  drawRotatedLabel(text, x, y, angle);
+  drawRotatedLabel(text, x, y, angle, color);
 
-  // Triangle size based on text size
   int h = 16;
   int w = 10;
   int cx = (x - screenW / 2) / 4 + screenW / 2;
   int cy = screenH - 10;
 
   if (arrowLeft) {
-    // ◀
     M5Dial.Display.fillTriangle(
       cx, cy,
       cx + w, cy - h / 2,
       cx + w, cy + h / 2,
-      ORANGE);
+      color);
   } else {
-    // ▶
     M5Dial.Display.fillTriangle(
       cx, cy,
       cx - w, cy - h / 2,
       cx - w, cy + h / 2,
-      ORANGE);
+      color);
   }
 }
 
@@ -110,11 +113,11 @@ void handleSerial(String& status) {
 
 LGFX_Sprite label(&M5Dial.Display);
 
-void drawRotatedLabel(const char* text, int x, int y, int angle) {
+void drawRotatedLabel(const char* text, int x, int y, int angle, uint16_t color) {
   label.createSprite(100, 40);
   label.fillSprite(BLACK);
   label.setTextDatum(middle_center);
-  label.setTextColor(ORANGE);
+  label.setTextColor(color);
   label.setTextFont(&fonts::Orbitron_Light_24);
   label.drawString(text, 50, 20);
 
@@ -152,17 +155,23 @@ void loop() {
   handleSerial(statusText);
 
   if (M5Dial.BtnA.wasPressed()) {
-    Serial.println("Button pressed");
-  }
-  long position = M5Dial.Encoder.read();
-  int step = 3;
-  if (!(-step <= position && position <= step)) {
-    if (position < -step) {
-      currentMenu = nextMenu(currentMenu);
-    } else if (position > step) {
-      currentMenu = prevMenu(currentMenu);
-    }
-    M5Dial.Encoder.write(0);
+    currentMode = (currentMode == MENU_SELECTION) ? MENU_ACTION : MENU_SELECTION;
     redrawUI(menuName(currentMenu));
+  }
+
+  if (currentMode == MENU_SELECTION) {
+    long position = M5Dial.Encoder.read();
+    int step = 3;
+
+    if (!(-step <= position && position <= step)) {
+      if (position < -step) {
+        currentMenu = nextMenu(currentMenu);
+      } else if (position > step) {
+        currentMenu = prevMenu(currentMenu);
+      }
+
+      M5Dial.Encoder.write(0);
+      redrawUI(menuName(currentMenu));
+    }
   }
 }
