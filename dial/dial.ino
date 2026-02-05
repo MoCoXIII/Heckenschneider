@@ -1,50 +1,143 @@
 #include <M5Dial.h>
 
+// ---------- Menu ----------
+enum Menu {
+  SERVO,
+  LIFT,
+  DRIVE
+};
+
+Menu currentMenu = SERVO;
+
+// ---------- Layout ----------
+int screenW, screenH;
+int statusY;
+
+// ---------- Helpers ----------
+const char* menuName(Menu m) {
+  switch (m) {
+    case SERVO: return "SERVO";
+    case LIFT: return "LIFT";
+    case DRIVE: return "DRIVE";
+  }
+  return "";
+}
+
+Menu prevMenu(Menu m) {
+  return (m == SERVO) ? DRIVE : (Menu)(m - 1);
+}
+
+Menu nextMenu(Menu m) {
+  return (m == DRIVE) ? SERVO : (Menu)(m + 1);
+}
+
 // ---------- Display helpers ----------
 void clearScreen() {
-  M5Dial.Display.fillRect(
-    0, 0,
-    M5Dial.Display.width(),
-    M5Dial.Display.height(),
-    BLACK
-  );
+  M5Dial.Display.fillRect(0, 0, screenW, screenH, BLACK);
 }
 
-void drawCenteredText(const String& text) {
+void drawStatusText(const String& text) {
+  M5Dial.Display.setTextDatum(middle_center);
+  M5Dial.Display.drawString(text, screenW / 2, statusY);
+}
+
+void drawMenuLabel(const char* text, int x, int y, float angle, bool arrowLeft) {
+  M5Dial.Display.setTextDatum(middle_center);
+  M5Dial.Display.setTextColor(ORANGE);
+
+  drawRotatedLabel(text, x, y, angle);
+
+  // Triangle size based on text size
+  int h = 16;
+  int w = 10;
+  int cx = (x - screenW / 2) / 4 + screenW / 2;
+  int cy = screenH - 10;
+
+  if (arrowLeft) {
+    // ◀
+    M5Dial.Display.fillTriangle(
+      cx, cy,
+      cx + w, cy - h / 2,
+      cx + w, cy + h / 2,
+      ORANGE);
+  } else {
+    // ▶
+    M5Dial.Display.fillTriangle(
+      cx, cy,
+      cx - w, cy - h / 2,
+      cx - w, cy + h / 2,
+      ORANGE);
+  }
+}
+
+void redrawUI(const String& status) {
   clearScreen();
-  M5Dial.Display.drawString(
-    text,
-    M5Dial.Display.width() / 2,
-    M5Dial.Display.height() / 2
-  );
+  drawStatusText(status);
+
+  int bottomY = screenH - 50;
+
+  // Left (CCW)
+  drawMenuLabel(
+    menuName(prevMenu(currentMenu)),
+    50,
+    bottomY,
+    45,
+    true);
+
+  // Right (CW)
+  drawMenuLabel(
+    menuName(nextMenu(currentMenu)),
+    screenW - 50,
+    bottomY,
+    -45,
+    false);
 }
 
-// ---------- Serial helpers ----------
-void handleSerial() {
+// ---------- Serial ----------
+void handleSerial(String& status) {
   if (Serial.available() > 0) {
     String message = Serial.readStringUntil('\n');
     message.trim();
 
-    // Handshake confirmation
     if (message == "connected") {
       Serial.println("connected");
     }
 
-    drawCenteredText(message);
+    status = message;
+    redrawUI(status);
   }
 }
 
-// ---------- Setup ----------
+LGFX_Sprite label(&M5Dial.Display);
+
+void drawRotatedLabel(const char* text, int x, int y, int angle) {
+  label.createSprite(100, 40);
+  label.fillSprite(BLACK);
+  label.setTextDatum(middle_center);
+  label.setTextColor(ORANGE);
+  label.setTextFont(&fonts::Orbitron_Light_24);
+  label.drawString(text, 50, 20);
+
+  label.setPivot(50, 20);
+  label.pushRotateZoom(x, y, angle, 1.0, 1.0, BLACK);
+
+  label.deleteSprite();
+}
+
 void setup() {
-  M5Dial.begin();
+  M5Dial.begin(true);
   Serial.begin(115200);
 
-  M5Dial.Display.setTextColor(ORANGE);
-  M5Dial.Display.setTextDatum(middle_center);
+  screenW = M5Dial.Display.width();
+  screenH = M5Dial.Display.height();
+  statusY = screenH / 4;
+
   M5Dial.Display.setTextFont(&fonts::Orbitron_Light_24);
   M5Dial.Display.setTextSize(1);
+  M5Dial.Display.setTextColor(ORANGE);
+  M5Dial.Display.setTextDatum(middle_center);
 
-  drawCenteredText("connecting...");
+  redrawUI("connecting...");
 
   while (!Serial) {
     delay(10);
@@ -55,9 +148,21 @@ void setup() {
 void loop() {
   M5Dial.update();
 
-  handleSerial();
+  static String statusText = "connecting...";
+  handleSerial(statusText);
 
   if (M5Dial.BtnA.wasPressed()) {
     Serial.println("Button pressed");
+  }
+  long position = M5Dial.Encoder.read();
+  int step = 3;
+  if (!(-step <= position && position <= step)) {
+    if (position < -step) {
+      currentMenu = nextMenu(currentMenu);
+    } else if (position > step) {
+      currentMenu = prevMenu(currentMenu);
+    }
+    M5Dial.Encoder.write(0);
+    redrawUI(menuName(currentMenu));
   }
 }
