@@ -42,16 +42,15 @@ while True:
     if ser.in_waiting:
         message = ser.readline().decode().strip()
         print(message)
-        if message[:3] == "led":
-            match message[3:]:
-                case "on":
-                    led.on()
-                case "off":
-                    led.off()
-                case _:
-                    led.toggle()
-        elif message[:5] == "servo":
+        if message == "led":
+            led.toggle()
+        elif message.startswith("servo"):
             if len(message) > 5:
                 servo.angle = int(message[5:])
             else:
                 servo.angle = None
+        elif message.startswith("lift"):
+            print(f"Lifting to {int(message[4:])}%")
+        elif message.startswith("drive"):
+            msg = message.split(" ")
+            print(f"Driving x:{msg[1]} y:{msg[2]} rotation:{"clockwise" if int(msg[3]) > 0 else "counterclockwise" if int(msg[3]) < 0 else "none"}")
