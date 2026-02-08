@@ -207,18 +207,9 @@ void loop() {
         break;
       case LIFT:
         {
-          long position = M5Dial.Encoder.read();
+          long position = M5Dial.Encoder.readAndReset();
 
-          if (position < 0) {
-            position = 0;
-            M5Dial.Encoder.write(0);
-          } else if (position > 100) {
-            position = 100;
-            M5Dial.Encoder.write(100);
-          }
-
-          if (lastPosition != position) {
-            lastPosition = position;
+          if (position != 0) {
             Serial.println("lift" + String(position));
           }
         }
@@ -230,8 +221,6 @@ void loop() {
           long dx = 0;
           long dy = 0;
           long enc = 0;
-
-
 
           if (t.isPressed()) {
             long distLeft = screenW / 3 - t.x;

@@ -14,11 +14,11 @@ for port in ports:
 
 factory = LGPIOFactory()
 
-led = gpiozero.LED(21)
+led = gpiozero.LED(14)
 led.off()
 
 servo = gpiozero.AngularServo(
-    14,
+    21,
     min_angle=0,
     max_angle=270,
     initial_angle=135,
@@ -33,37 +33,7 @@ direction = OutputDevice(4)
 enable = OutputDevice(6)
 enable.off()
 
-TOTAL_STEPS = 7500
-current_position_steps = 0
-target_position_steps = 0
 STEP_DELAY = 0.0005
-
-
-def stepper_worker():
-    global current_position_steps, target_position_steps
-
-    while True:
-        if current_position_steps < target_position_steps:
-            direction.on()
-            step.on()
-            time.sleep(STEP_DELAY)
-            step.off()
-            time.sleep(STEP_DELAY)
-            current_position_steps += 1
-
-        elif current_position_steps > target_position_steps:
-            direction.off()
-            step.on()
-            time.sleep(STEP_DELAY)
-            step.off()
-            time.sleep(STEP_DELAY)
-            current_position_steps -= 1
-
-        else:
-            time.sleep(0.01)
-
-
-threading.Thread(target=stepper_worker, daemon=True).start()
 
 ser = None
 while not ser:
@@ -92,12 +62,21 @@ while True:
             else:
                 servo.angle = None
         elif message.startswith("lift"):
-            percent = int(message[4:])
-            percent = max(0, min(100, percent))
+            d = int(message[4:])
+            if d > 0:
+                direction.on()
+                step.on()
+                time.sleep(0.01)
+                step.off()
+                time.sleep(0.01)
+            else:
+                direction.off()
+                step.on()
+                time.sleep(0.01)
+                step.off()
+                time.sleep(0.01)
 
-            target_position_steps = int((percent / 100.0) * TOTAL_STEPS)
-
-            print(f"Lifting to {percent}% ({target_position_steps} steps)")
+            print(f"Lifting to {d}")
         elif message.startswith("drive"):
             msg = message.split(" ")
             dx = int(msg[1])
