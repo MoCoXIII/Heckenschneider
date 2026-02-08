@@ -28,9 +28,9 @@ servo = gpiozero.AngularServo(
 )
 servo.angle = 0
 
-step = OutputDevice(5)
-direction = OutputDevice(4)
-enable = OutputDevice(6)
+step = OutputDevice(24)
+direction = OutputDevice(23)
+enable = OutputDevice(25)
 enable.off()
 
 STEP_DELAY = 0.0005
