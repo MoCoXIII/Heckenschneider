@@ -68,11 +68,11 @@ def drive_motor(pwm, in1, in2, value):
     if value > 0:
         in1.on()
         in2.off()
-        pwm.value = min(abs(value) / 300, 1.0)
+        pwm.value = min(abs(value) / 70, 1.0)
     elif value < 0:
         in1.off()
         in2.on()
-        pwm.value = min(abs(value) / 300, 1.0)
+        pwm.value = min(abs(value) / 70, 1.0)
     else:
         in1.off()
         in2.off()
@@ -140,10 +140,10 @@ while True:
             rl /= max_val
             rr /= max_val
 
-            fl *= 300
-            fr *= 300
-            rl *= 300
-            rr *= 300
+            fl *= 70
+            fr *= 70
+            rl *= 70
+            rr *= 70
 
             drive_motor(pwm_fl, fl_in1, fl_in2, fl)
             drive_motor(pwm_fr, fr_in1, fr_in2, fr)
