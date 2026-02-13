@@ -4,7 +4,7 @@ import random
 import serial
 import gpiozero
 import threading
-from gpiozero import OutputDevice
+from gpiozero import PWMOutputDevice, OutputDevice
 from gpiozero.pins.lgpio import LGPIOFactory
 import serial.tools.list_ports
 
@@ -33,7 +33,51 @@ direction = OutputDevice(23)
 enable = OutputDevice(25)
 enable.off()
 
-STEP_DELAY = 0.0005
+STEP_DELAY = 0.001
+
+# front left
+fl_in1 = OutputDevice(6)
+fl_in2 = OutputDevice(5)
+pwm_fl = PWMOutputDevice(0)
+
+# front right
+fr_in1 = OutputDevice(4)
+fr_in2 = OutputDevice(3)
+pwm_fr = PWMOutputDevice(2)
+
+# rear left
+# rl_in1 = OutputDevice()
+# rl_in2 = OutputDevice()
+# pwm_rl = PWMOutputDevice()
+
+# rear right
+# rr_in1 = OutputDevice()
+# rr_in2 = OutputDevice()
+# pwm_rr = PWMOutputDevice()
+
+# standby left
+STBYL = OutputDevice(13)
+STBYL.on()
+
+# standby right
+STBYR = OutputDevice(17)
+STBYR.on()
+
+
+def drive_motor(pwm, in1, in2, value):
+    if value > 0:
+        in1.on()
+        in2.off()
+        pwm.value = min(abs(value) / 300, 1.0)
+    elif value < 0:
+        in1.off()
+        in2.on()
+        pwm.value = min(abs(value) / 300, 1.0)
+    else:
+        in1.off()
+        in2.off()
+        pwm.value = 0
+
 
 ser = None
 while not ser:
@@ -66,22 +110,42 @@ while True:
             if d > 0:
                 direction.on()
                 step.on()
-                time.sleep(0.01)
+                time.sleep(STEP_DELAY)
                 step.off()
-                time.sleep(0.01)
+                time.sleep(STEP_DELAY)
             else:
                 direction.off()
                 step.on()
-                time.sleep(0.01)
+                time.sleep(STEP_DELAY)
                 step.off()
-                time.sleep(0.01)
-
-            print(f"Lifting to {d}")
+                time.sleep(STEP_DELAY)
         elif message.startswith("drive"):
             msg = message.split(" ")
-            dx = int(msg[1])
-            dy = int(msg[2])
-            rotation = int(msg[3])
-            print(
-                f"Driving x:{dx} y:{dy} rotation:{"clockwise" if rotation > 0 else "counterclockwise" if rotation < 0 else "none"}"
-            )
+            x = int(msg[1])
+            y = int(msg[2])
+            rotation = int(
+                msg[3]
+            )  # -1 (counterclockwise), 0 (no rotation) or 1 (clockwise)
+            r_scaled = rotation * 120
+            fl = y + x + r_scaled
+            fr = y - x - r_scaled
+            rl = y - x + r_scaled
+            rr = y + x - r_scaled
+
+            # normalize
+            max_val = max(abs(fl), abs(fr), abs(rl), abs(rr), 1)
+
+            fl /= max_val
+            fr /= max_val
+            rl /= max_val
+            rr /= max_val
+
+            fl *= 300
+            fr *= 300
+            rl *= 300
+            rr *= 300
+
+            drive_motor(pwm_fl, fl_in1, fl_in2, fl)
+            drive_motor(pwm_fr, fr_in1, fr_in2, fr)
+            # drive_motor(pwm_rl, rl_in1, rl_in2, rl)
+            # drive_motor(pwm_rr, rr_in1, rr_in2, rr)
