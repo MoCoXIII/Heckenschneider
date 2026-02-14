@@ -55,19 +55,19 @@ def drive_motor(pwm, in1, in2, value):
 # front left
 fl_in1 = OutputDevice(6)
 fl_in2 = OutputDevice(5)
-pwm_fl = PWMOutputDevice(0)
+pwm_fl = PWMOutputDevice(18)
 drive_motor(pwm_fl, fl_in1, fl_in2, 0)
 
 # front right
 fr_in1 = OutputDevice(4)
 fr_in2 = OutputDevice(3)
-pwm_fr = PWMOutputDevice(2)
+pwm_fr = PWMOutputDevice(19)
 drive_motor(pwm_fr, fr_in1, fr_in2, 0)
 
 # rear left
 rl_in1 = OutputDevice(7)
 rl_in2 = OutputDevice(8)
-pwm_rl = PWMOutputDevice(1)
+pwm_rl = PWMOutputDevice(13)
 drive_motor(pwm_rl, rl_in1, rl_in2, 0)
 
 # rear right
@@ -77,7 +77,7 @@ pwm_rr = PWMOutputDevice(12)
 drive_motor(pwm_rr, rr_in1, rr_in2, 0)
 
 # standby left
-STBYL = OutputDevice(13)
+STBYL = OutputDevice(1)
 STBYL.on()
 
 # standby right
