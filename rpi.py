@@ -41,11 +41,11 @@ def drive_motor(pwm, in1, in2, value):
     if value > 0:
         in1.on()
         in2.off()
-        pwm.value = min(abs(value) / 70, 1.0)
+        pwm.value = value
     elif value < 0:
         in1.off()
         in2.on()
-        pwm.value = min(abs(value) / 70, 1.0)
+        pwm.value = value
     else:
         in1.off()
         in2.off()
@@ -132,24 +132,19 @@ while True:
             rotation = int(
                 msg[3]
             )  # -1 (counterclockwise), 0 (no rotation) or 1 (clockwise)
-            r_scaled = rotation * 120
+            r_scaled = rotation * 30
             fl = y + x + r_scaled
             fr = y - x - r_scaled
             rl = y - x + r_scaled
             rr = y + x - r_scaled
 
             # normalize
-            max_val = max(abs(fl), abs(fr), abs(rl), abs(rr), 1)
+            max_val = max(abs(fl), abs(fr), abs(rl), abs(rr), 60)
 
             fl /= max_val
             fr /= max_val
             rl /= max_val
             rr /= max_val
-
-            fl *= 70
-            fr *= 70
-            rl *= 70
-            rr *= 70
 
             drive_motor(pwm_fl, fl_in1, fl_in2, fl)
             drive_motor(pwm_fr, fr_in1, fr_in2, fr)
