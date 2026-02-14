@@ -45,7 +45,7 @@ def drive_motor(pwm, in1, in2, value):
     elif value < 0:
         in1.off()
         in2.on()
-        pwm.value = value
+        pwm.value = -value
     else:
         in1.off()
         in2.off()
