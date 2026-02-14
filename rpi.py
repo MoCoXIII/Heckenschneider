@@ -35,34 +35,6 @@ enable.off()
 
 STEP_DELAY = 0.001
 
-# front left
-fl_in1 = OutputDevice(6)
-fl_in2 = OutputDevice(5)
-pwm_fl = PWMOutputDevice(0)
-
-# front right
-fr_in1 = OutputDevice(8)
-fr_in2 = OutputDevice(7)
-pwm_fr = PWMOutputDevice(1)
-
-# rear left
-rl_in1 = OutputDevice(4)
-rl_in2 = OutputDevice(3)
-pwm_rl = PWMOutputDevice(2)
-
-# rear right
-rr_in1 = OutputDevice(20)
-rr_in2 = OutputDevice(16)
-pwm_rr = PWMOutputDevice(12)
-
-# standby left
-STBYL = OutputDevice(13)
-STBYL.on()
-
-# standby right
-STBYR = OutputDevice(17)
-STBYR.on()
-
 
 def drive_motor(pwm, in1, in2, value):
     if value > 0:
@@ -77,6 +49,39 @@ def drive_motor(pwm, in1, in2, value):
         in1.off()
         in2.off()
         pwm.value = 0
+
+
+# front left
+fl_in1 = OutputDevice(6)
+fl_in2 = OutputDevice(5)
+pwm_fl = PWMOutputDevice(0)
+drive_motor(pwm_fl, fl_in1, fl_in2, 0)
+
+# front right
+fr_in1 = OutputDevice(8)
+fr_in2 = OutputDevice(7)
+pwm_fr = PWMOutputDevice(1)
+drive_motor(pwm_fr, fr_in1, fr_in2, 0)
+
+# rear left
+rl_in1 = OutputDevice(4)
+rl_in2 = OutputDevice(3)
+pwm_rl = PWMOutputDevice(2)
+drive_motor(pwm_rl, rl_in1, rl_in2, 0)
+
+# rear right
+rr_in1 = OutputDevice(20)
+rr_in2 = OutputDevice(16)
+pwm_rr = PWMOutputDevice(12)
+drive_motor(pwm_rr, rr_in1, rr_in2, 0)
+
+# standby left
+STBYL = OutputDevice(13)
+STBYL.on()
+
+# standby right
+STBYR = OutputDevice(17)
+STBYR.on()
 
 
 ser = None
