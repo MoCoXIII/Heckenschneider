@@ -66,7 +66,7 @@ drive_motor(pwm_fr, fr_in1, fr_in2, 0)
 
 # rear left
 rl_in1 = OutputDevice(7)
-rl_in2 = OutputDevice(12)
+rl_in2 = OutputDevice(8)
 pwm_rl = PWMOutputDevice(1)
 drive_motor(pwm_rl, rl_in1, rl_in2, 0)
 
