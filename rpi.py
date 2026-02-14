@@ -22,8 +22,8 @@ servo = gpiozero.AngularServo(
     min_angle=0,
     max_angle=270,
     initial_angle=135,
-    min_pulse_width=0.0006,  # try 600 µs
-    max_pulse_width=0.0024,  # try 2400 µs
+    min_pulse_width=0.0006,
+    max_pulse_width=0.0024,
     pin_factory=factory,
 )
 servo.angle = 0
@@ -41,19 +41,19 @@ fl_in2 = OutputDevice(5)
 pwm_fl = PWMOutputDevice(0)
 
 # front right
-fr_in1 = OutputDevice(4)
-fr_in2 = OutputDevice(3)
-pwm_fr = PWMOutputDevice(2)
+fr_in1 = OutputDevice(8)
+fr_in2 = OutputDevice(7)
+pwm_fr = PWMOutputDevice(1)
 
 # rear left
-# rl_in1 = OutputDevice()
-# rl_in2 = OutputDevice()
-# pwm_rl = PWMOutputDevice()
+rl_in1 = OutputDevice(4)
+rl_in2 = OutputDevice(3)
+pwm_rl = PWMOutputDevice(2)
 
 # rear right
-# rr_in1 = OutputDevice()
-# rr_in2 = OutputDevice()
-# pwm_rr = PWMOutputDevice()
+rr_in1 = OutputDevice(20)
+rr_in2 = OutputDevice(16)
+pwm_rr = PWMOutputDevice(12)
 
 # standby left
 STBYL = OutputDevice(13)
@@ -147,5 +147,5 @@ while True:
 
             drive_motor(pwm_fl, fl_in1, fl_in2, fl)
             drive_motor(pwm_fr, fr_in1, fr_in2, fr)
-            # drive_motor(pwm_rl, rl_in1, rl_in2, rl)
-            # drive_motor(pwm_rr, rr_in1, rr_in2, rr)
+            drive_motor(pwm_rl, rl_in1, rl_in2, rl)
+            drive_motor(pwm_rr, rr_in1, rr_in2, rr)
