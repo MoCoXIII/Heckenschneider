@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import random
 import serial
@@ -7,6 +8,17 @@ import threading
 from gpiozero import PWMOutputDevice, OutputDevice
 from gpiozero.pins.lgpio import LGPIOFactory
 import serial.tools.list_ports
+
+if os.name == 'posix':
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(os.path.join(os.path.expanduser('~'), 'Documents', 'Heckenschneider'))
+    result = os.system('git pull')
+    if result == 0:
+        print('New version pulled, restarting...')
+        os.execl(os.path.abspath(__file__), *sys.argv)
+    else:
+        print('No new version pulled, keep running current version')
+    os.chdir(current_dir)
 
 ports = serial.tools.list_ports.comports()
 for port in ports:
