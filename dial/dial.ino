@@ -191,11 +191,11 @@ void loop() {
           if (servoPosition < 0) {
             servoPosition = 0;
             M5Dial.Encoder.write(0);
-          } else if (servoPosition > 48) {
-            servoPosition = 48;
-            M5Dial.Encoder.write(48);
+          } else if (servoPosition > 270) {
+            servoPosition = 270;
+            M5Dial.Encoder.write(270);
           }
-          long adjustedPosition = servoPosition * 5.625;
+          long adjustedPosition = servoPosition * 1;
           if (lastPosition != servoPosition) {
             lastPosition = servoPosition;
             Serial.println("servo" + String(adjustedPosition));
