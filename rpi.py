@@ -109,7 +109,7 @@ while True:
                 last_servo_time = time.time()
                 def reset_servo():
                     global last_servo_time
-                    if time.time() - last_servo_time > 5:
+                    if time.time() - last_servo_time > 4:
                         servo.angle = None
                 t = threading.Timer(5.0, reset_servo)
                 t.start()
@@ -158,7 +158,7 @@ while True:
             last_motor_change = time.time()
             def stop_motors():
                 global last_motor_change
-                if time.time() - last_motor_change > 2:
+                if time.time() - last_motor_change > 1:
                     drive_motor(pwm_fl, fl_in1, fl_in2, 0)
                     drive_motor(pwm_fr, fr_in1, fr_in2, 0)
                     drive_motor(pwm_rl, rl_in1, rl_in2, 0)
