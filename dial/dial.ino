@@ -1,6 +1,5 @@
 #include <M5Dial.h>
 
-// ---------- Menu ----------
 enum Menu {
   SERVO,
   LIFT,
@@ -16,15 +15,16 @@ enum UiMode {
 
 UiMode currentMode = MENU_SELECTION;
 
-// ---------- Layout ----------
 int screenW, screenH;
 int statusY;
 
 bool connected;
 long lastPosition;
-bool stickCentered = false;  // graphical hint in driving mode
+long servoPosition;
+bool stickCentered = false;
+int direction = 0;
 
-// ---------- Helpers ----------
+
 const char* menuName(Menu m) {
   switch (m) {
     case SERVO: return "SERVO";
@@ -42,7 +42,6 @@ Menu nextMenu(Menu m) {
   return (m == DRIVE) ? SERVO : (Menu)(m + 1);
 }
 
-// ---------- Display helpers ----------
 void clearScreen() {
   M5Dial.Display.fillRect(0, 0, screenW, screenH, BLACK);
 }
@@ -83,7 +82,6 @@ void redrawUI(const String& status) {
 
   int bottomY = screenH - 50;
 
-  // Left (CCW)
   drawMenuLabel(
     menuName(prevMenu(currentMenu)),
     50,
@@ -91,7 +89,6 @@ void redrawUI(const String& status) {
     45,
     true);
 
-  // Right (CW)
   drawMenuLabel(
     menuName(nextMenu(currentMenu)),
     screenW - 50,
@@ -100,7 +97,6 @@ void redrawUI(const String& status) {
     false);
 }
 
-// ---------- Serial ----------
 void handleSerial(String& status) {
   if (Serial.available() > 0) {
     String message = Serial.readStringUntil('\n');
@@ -154,7 +150,6 @@ void setup() {
   }
 }
 
-// ---------- Loop ----------
 void loop() {
   M5Dial.update();
 
@@ -167,8 +162,10 @@ void loop() {
 
   if (M5Dial.BtnA.wasReleasedAfterHold()) {
     currentMode = (currentMode == MENU_SELECTION) ? MENU_ACTION : MENU_SELECTION;
+    M5Dial.Encoder.write(currentMenu == SERVO ? servoPosition : 0);
     redrawUI(menuName(currentMenu));
   } else if (M5Dial.BtnA.wasReleased()) {
+    M5Dial.Encoder.write(0);
     Serial.println("led");
   }
 
@@ -190,17 +187,17 @@ void loop() {
     switch (currentMenu) {
       case SERVO:
         {
-          long position = M5Dial.Encoder.read();
-          if (position < 0) {
-            position = 0;
+          servoPosition = M5Dial.Encoder.read();
+          if (servoPosition < 0) {
+            servoPosition = 0;
             M5Dial.Encoder.write(0);
-          } else if (position > 48) {
-            position = 48;
+          } else if (servoPosition > 48) {
+            servoPosition = 48;
             M5Dial.Encoder.write(48);
           }
-          long adjustedPosition = position * 5.625;
-          if (lastPosition != position) {
-            lastPosition = position;
+          long adjustedPosition = servoPosition * 5.625;
+          if (lastPosition != servoPosition) {
+            lastPosition = servoPosition;
             Serial.println("servo" + String(adjustedPosition));
           }
         }
@@ -223,6 +220,8 @@ void loop() {
           long enc = 0;
 
           if (t.isPressed()) {
+            direction = 0;
+
             long distLeft = screenW / 3 - t.x;
             long distRight = t.x - screenW * 2 / 3;
             dx = distLeft > 0 ? -distLeft : distRight > 0 ? distRight
@@ -240,9 +239,18 @@ void loop() {
             M5Dial.Display.fillCircle(screenW / 2, screenH / 2, 20, ORANGE);
             stickCentered = true;
           }
-          if (M5Dial.Encoder.read() != 0) {
+          if (M5Dial.Encoder.read() > 3 && !(direction > 0)) {
+            M5Dial.Encoder.write(0);
             changed = true;
-            enc = M5Dial.Encoder.readAndReset();
+            direction++;
+            enc = direction;
+          } else if (M5Dial.Encoder.read() < -3 && !(direction < 0)) {
+            M5Dial.Encoder.write(0);
+            changed = true;
+            direction--;
+            enc = direction;
+          } else if (abs(M5Dial.Encoder.read()) > 3) {
+            M5Dial.Encoder.write(0);
           }
 
           if (changed) {

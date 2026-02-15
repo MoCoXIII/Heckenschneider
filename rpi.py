@@ -15,7 +15,7 @@ for port in ports:
 
 factory = LGPIOFactory()
 
-led = gpiozero.LED(14)
+led = gpiozero.LED(27)
 led.off()
 
 servo = gpiozero.AngularServo(
