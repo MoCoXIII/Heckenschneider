@@ -6,14 +6,15 @@ import serial
 import gpiozero
 import threading
 from gpiozero import PWMOutputDevice, OutputDevice
-from gpiozero.pins.lgpio import LGPIOFactory
+from gpiozero.pins.pigpio import PiGPIOFactory
+
 import serial.tools.list_ports
 
 ports = serial.tools.list_ports.comports()
 for port in ports:
     print(port.device, "-", port.description)
 
-factory = LGPIOFactory()
+pin_factory = PiGPIOFactory()
 
 led = gpiozero.LED(27)
 led.off()
@@ -25,7 +26,7 @@ servo = gpiozero.AngularServo(
     initial_angle=135,
     min_pulse_width=0.0006,
     max_pulse_width=0.0024,
-    pin_factory=factory,
+    pin_factory=pin_factory,
 )
 servo.angle = 0
 
@@ -109,6 +110,13 @@ while True:
         elif message.startswith("servo"):
             if len(message) > 5:
                 servo.angle = int(message[5:])
+                last_servo_time = time.time()
+                def reset_servo():
+                    global last_servo_time
+                    if time.time() - last_servo_time > 5:
+                        servo.angle = None
+                t = threading.Timer(5.0, reset_servo)
+                t.start()
             else:
                 servo.angle = None
         elif message.startswith("lift"):
@@ -150,3 +158,15 @@ while True:
             drive_motor(pwm_fr, fr_in1, fr_in2, fr)
             drive_motor(pwm_rl, rl_in1, rl_in2, rl)
             drive_motor(pwm_rr, rr_in1, rr_in2, rr)
+            
+            last_motor_change = time.time()
+            def stop_motors():
+                global last_motor_change
+                if time.time() - last_motor_change > 2:
+                    drive_motor(pwm_fl, fl_in1, fl_in2, 0)
+                    drive_motor(pwm_fr, fr_in1, fr_in2, 0)
+                    drive_motor(pwm_rl, rl_in1, rl_in2, 0)
+                    drive_motor(pwm_rr, rr_in1, rr_in2, 0)
+
+            t = threading.Timer(2.0, stop_motors)
+            t.start()
