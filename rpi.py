@@ -6,15 +6,12 @@ import serial
 import gpiozero
 import threading
 from gpiozero import PWMOutputDevice, OutputDevice
-from gpiozero.pins.pigpio import PiGPIOFactory
 
 import serial.tools.list_ports
 
 ports = serial.tools.list_ports.comports()
 for port in ports:
     print(port.device, "-", port.description)
-
-pin_factory = PiGPIOFactory()
 
 led = gpiozero.LED(27)
 led.off()
@@ -26,7 +23,6 @@ servo = gpiozero.AngularServo(
     initial_angle=135,
     min_pulse_width=0.0006,
     max_pulse_width=0.0024,
-    pin_factory=pin_factory,
 )
 servo.angle = 0
 
