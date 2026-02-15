@@ -24,7 +24,7 @@ servo = gpiozero.AngularServo(
     min_pulse_width=0.0006,
     max_pulse_width=0.0024,
 )
-servo.angle = 0
+servo.angle = None
 
 # step = OutputDevice(24)
 # direction = OutputDevice(23)
