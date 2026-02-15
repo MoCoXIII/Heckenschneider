@@ -29,12 +29,12 @@ servo = gpiozero.AngularServo(
 )
 servo.angle = 0
 
-step = OutputDevice(24)
-direction = OutputDevice(23)
-enable = OutputDevice(25)
-enable.off()
+# step = OutputDevice(24)
+# direction = OutputDevice(23)
+# enable = OutputDevice(25)
+# enable.off()
 
-STEP_DELAY = 0.001
+# STEP_DELAY = 0.001
 
 
 def drive_motor(pwm, in1, in2, value):
@@ -113,18 +113,18 @@ while True:
                 servo.angle = None
         elif message.startswith("lift"):
             d = int(message[4:])
-            if d > 0:
-                direction.on()
-                step.on()
-                time.sleep(STEP_DELAY)
-                step.off()
-                time.sleep(STEP_DELAY)
-            else:
-                direction.off()
-                step.on()
-                time.sleep(STEP_DELAY)
-                step.off()
-                time.sleep(STEP_DELAY)
+            # if d > 0:
+            #     direction.on()
+            #     step.on()
+            #     time.sleep(STEP_DELAY)
+            #     step.off()
+            #     time.sleep(STEP_DELAY)
+            # else:
+            #     direction.off()
+            #     step.on()
+            #     time.sleep(STEP_DELAY)
+            #     step.off()
+            #     time.sleep(STEP_DELAY)
         elif message.startswith("drive"):
             msg = message.split(" ")
             x = int(msg[1])
